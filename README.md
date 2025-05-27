@@ -12,7 +12,7 @@
 ## Preview :
 
 
-![](Examples/p1.png)
+![](Examples/p1.jpg)
 
 ## Installation
 
@@ -22,7 +22,7 @@
  ```
 2. Change the Current Directory To ai-compiler:
  ``` bash
-cd AI-Compiler-Updated
+cd ai_compiler.py
  ```
 3. Install required packages:
  ```bash
