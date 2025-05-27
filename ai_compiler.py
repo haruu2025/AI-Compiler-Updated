@@ -1,25 +1,38 @@
 import streamlit as st
 import subprocess
-from groq import Groq
-import google.generativeai as genai
-from openai import OpenAI
+from groq import Client as groq  # Assuming correct import for groq client
+from google.genai import Client as genai  # Assuming correct import for genai client
+import openai  # OpenAI Python client library
 import os
 import time
 
 # Set up environment variables for sensitive information
-os.environ['GROQ_API_KEY'] = "YOUR_API_KEY"
-os.environ['GENAI_API_KEY'] = "YOUR_API_KEY"
-os.environ['MIXTRAL_API_KEY'] = "YOUR_API_KEY"
+os.environ['GROQ_API_KEY'] = "your_api_key"
+os.environ['GEMINI_API_KEY'] = "your_api_key"
+os.environ['MIXTRAL_API_KEY'] = "your_api_key"
 
 # Initialize clients
-groq_client = Groq(api_key=os.getenv('GROQ_API_KEY'))
-genai.configure(api_key=os.getenv('GENAI_API_KEY'))
-gemini_model = genai.GenerativeModel('gemini-1.5-flash',tools='code_execution')
-mixtral_client = OpenAI(
+groq_client = groq(api_key=os.getenv('GROQ_API_KEY'))
+genai_client = genai(api_key=os.getenv('GEMINI_API_KEY'))
+mixtral_client = openai.OpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
     api_key=os.getenv('MIXTRAL_API_KEY')
 )
+
+# Example usage for genai client
+chat_completion = genai_client.models.generate_content(
+    model="gemini-2.0-flash-001",
+    contents="Explain the importance of low latency LLMs"
+)
+
+# Print the response
+print(chat_completion.text)
+
+# Streamlit page configuration
 st.set_page_config(layout="wide")
+
+
+
 
 def home():
     st.markdown("<h1 style='text-align: center; font-family: Arial, sans-serif;'>Welcome to AI Coding Assistant</h1>", unsafe_allow_html=True)
@@ -29,7 +42,7 @@ def home():
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("<div class='fadeIn'>", unsafe_allow_html=True)
-        st.subheader("Compiler AI")
+        st.subheader("Debugger AI")
         st.write("Debug and fix your code with AI assistance.")
         st.markdown("</div>", unsafe_allow_html=True)
         st.markdown("<div class='fadeIn'>", unsafe_allow_html=True)
@@ -38,10 +51,7 @@ def home():
         st.markdown("</div>", unsafe_allow_html=True)
     
     with col2:
-        st.markdown("<div class='fadeIn'>", unsafe_allow_html=True)
-        st.subheader("Coding Guru")
-        st.write("Generate complex code from scratch using multiple AI models.")
-        st.markdown("</div>", unsafe_allow_html=True)
+        
         st.markdown("<div class='fadeIn'>", unsafe_allow_html=True)
         st.subheader("Code Translator")
         st.write("Translate code from one programming language to another using AI.")
@@ -82,11 +92,11 @@ Mixtral Response: {mixtral_response}
 Don't write Any Explanation just Write the Code no need for Explanation
 Your Response: """
 
-    response = gemini_model.generate_content(combined_prompt)
+    response = genai_client.generate_content(combined_prompt)
     return response.text
 
 def compiler_ai():
-    st.markdown("<h1 style='text-align: center; font-family: Arial, sans-serif;'>Compiler AI</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; font-family: Arial, sans-serif;'>Debugger AI</h1>", unsafe_allow_html=True)
 
     col1, col2 = st.columns([1, 1])
 
@@ -174,30 +184,7 @@ def compiler_ai():
             st.subheader("Corrected Code:")
             st.code(st.session_state.corrected_code)
 
-def coding_guru():
-    st.markdown("<h1 style='text-align: center; font-family: Arial, sans-serif;'>Coding Guru</h1>", unsafe_allow_html=True)
 
-    col1, col2 = st.columns([1, 1])
-
-    with col1:
-        st.header("Paste your Query here:")
-        query = st.text_area("I can generate complex codes from scratch:", height=400)
-        
-        if st.button("Submit"):
-            st.success("Your Query is submitted")
-            st.balloons()
-
-            language = st.session_state.get("coding_guru_language", "Python")
-            prompt = f"Generate a complex {language} code for the following query: {query}"
-
-            llama3_response = get_llama3_response(prompt)
-            mixtral_response = get_mixtral_response(prompt, llama3_response)
-            gemini_response = get_gemini_response(prompt, mixtral_response)
-
-            with col2:
-                st.header("Final Response:")
-                st.subheader(f"{language} Code")
-                st.code(gemini_response)
 
 def documentation_writer():
     st.markdown("<h1 style='text-align: center; font-family: Arial, sans-serif;'>Documentation Writer</h1>", unsafe_allow_html=True)
@@ -260,19 +247,16 @@ def code_translator():
 
 def main():
     st.sidebar.title("Navigation")
-    app_mode = st.sidebar.selectbox("Choose the app mode", ["Home", "Compiler AI", "Coding Guru", "Documentation Writer", "Code Translator"])
+    app_mode = st.sidebar.selectbox("Choose the app mode", ["Home", "Debugger AI", "Documentation Writer", "Code Translator"])
 
-    if app_mode == "Coding Guru":
-        st.sidebar.header("Coding Guru Settings")
-        st.sidebar.selectbox("Select Programming Language", ["Python", "Java", "C", "C++", "R"], key="coding_guru_language")
-    elif app_mode == "Code Translator":
+    
+    if app_mode == "Code Translator":
         
         st.sidebar.selectbox("Select Target Programming Language", ["C", "C++", "Python", "R", "Java", "Go", "Bash"], key="code_translator_language")
 
-    if app_mode == "Compiler AI":
+    if app_mode == "Debugger AI":
         compiler_ai()
-    elif app_mode == "Coding Guru":
-        coding_guru()
+    
     elif app_mode == "Code Translator":
         code_translator()
     elif app_mode == "Home":
